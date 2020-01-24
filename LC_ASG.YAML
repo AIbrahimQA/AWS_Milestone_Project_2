@@ -1,0 +1,25 @@
+# Launch Configuration
+
+- hosts: localhost
+  connection: local
+  tasks:
+  - name: Launch Configuration
+    ec2_lc:
+      name: my_new_lc
+      image_id: ami-03b2ee5a68cf32a20
+      key_name: example
+      region: eu-west-2
+      security_groups: ['AutoScaling-Security-Group-2' ]
+      instance_type: t2.micro
+
+# Auto Scaling Group
+  - ec2_asg:
+      name: myasg
+      launch_config_name: my_new_lc
+      health_check_period: 60
+      health_check_type: ELB
+      replace_all_instances: yes
+      min_size: 2
+      max_size: 3
+      desired_capacity: 2
+      region: eu-west-2
