@@ -1,0 +1,52 @@
+# ELastic Load Balancer
+- name: Create the ELB listening over port 80
+  ec2_elb_lb:
+  name: load-balancer
+    state: present
+    region: eu-west-2
+    zones:
+      - eu-west-2a
+      - eu-west-2b
+      - eu-west-2c
+    listeners:
+      - protocol: http
+        load_balancer_port: 80
+        instance_port: 80
+  register: elb
+
+
+# Launch Configuration
+- name: Launch Configuration
+  ec2_lc:
+    name: LC
+    image_id: ami-03b2ee5a68cf32a20
+    key_name: CloudFormationLC
+    region: eu-west-2
+    security_groups: ['AutoScaling-Security-Group-2' ]
+    instance_type: t2.micro
+    volumes:
+    - device_name: /dev/sda1
+      volume_size: 8
+      volume_type: ebs
+      iops: 16,000
+      delete_on_termination: true
+
+
+
+# Auto Scaling Group
+
+- ec2_asg:
+    name: Auto Scaling Group
+    load_balancers: [ 'load-balancer' ]
+    availability_zones: [ 'eu-west-2a', 'eu-west-2b', 'eu-west-2c' ]
+    launch_config_name: 'lC'
+    min_size: 2
+    max_size: 3
+    desired_capacity: 2
+    vpc_zone_identifier: [ 'subnet-0b399dba5dba004fa', 'subnet-0449ddb246e2ccba3', 'subnet-00ae4af9d4b151a7d' ]
+    tags:
+      - environment: production
+        propagate_at_launch: no
+
+
+
