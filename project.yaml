@@ -1,0 +1,75 @@
+#docker project
+- hosts: localhost
+  connection: local
+  tasks:
+  - name: prerequisites
+    apt:
+      pkg:
+      - apt-transport-https
+      - ca-certificates
+      - curl
+      - gnupg2
+      - software-properties-common
+      state: latest
+      update_cache: true
+  - name: docker gpg key
+    apt_key:
+      url: "https://download.docker.com/linux/debian/gpg"
+      state: present
+  - name: docker apt repo
+    apt_repository:
+      repo: "deb [arch=amd64] https://download.docker.com/linux/debian stretch stable"
+      state: present
+  - name: docker install
+    apt:
+      pkg:
+      - docker-ce
+      - docker-ce-cli
+      - containerd.io
+      state: latest
+      update_cache: true
+  - name: docker service
+    service:
+      name: docker
+      state: started
+  - name: Systemd reload
+    systemd:
+      daemon_reload: yes
+  - name: Install python3 pip
+    apt:
+     name: python3-pip
+     state: latest
+     update_cache: true
+  - name: Install Docker
+    command: pip3 install docker
+  - name: Install Requests
+    command: pip3 install requests
+# install git plus git clone project
+
+  - name: Install Git
+    apt:
+      name: git
+      state: latest
+  - name: Create Directory
+    file:
+      path: /home/project
+      state: directory
+      mode: '0700'
+  - name: Git clone
+    git:
+      repo: https://github.com/AIbrahimQA/new_project.git
+      dest: /home/project/new_project
+      version: master
+      clone: yes
+      recursive: yes
+  
+# install docker-compose plus run
+  - name: Install Docker Compose
+    pip:
+      name: docker-compose
+      state: latest
+  - name: Docker Compose up
+    docker_compose:
+      project_src: /home/project/new_project
+      build: yes
+      state: present
